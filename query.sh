@@ -1,5 +1,34 @@
 #!/usr/bin/env bash
 
+# Enable colorized output when supported.
+COLOR_RESET=""
+COLOR_INFO=""
+COLOR_EMPH=""
+COLOR_ERROR=""
+
+if [[ -t 1 || -t 2 ]]; then
+  COLOR_RESET=$'\033[0m'
+fi
+
+if [[ -t 1 ]]; then
+  COLOR_INFO=$'\033[36m'
+  COLOR_EMPH=$'\033[33m'
+fi
+
+if [[ -t 2 ]]; then
+  COLOR_ERROR=$'\033[31m'
+fi
+
+print_error() {
+  printf '%s\n' "${COLOR_ERROR}$*${COLOR_RESET}" >&2
+}
+
+print_label_value() {
+  local label=$1
+  local value=$2
+  printf '%s%s:%s %s%s%s\n' "${COLOR_INFO}" "$label" "${COLOR_RESET}" "${COLOR_EMPH}" "$value" "${COLOR_RESET}"
+}
+
 usage() {
   cat <<'EOF'
 Usage: apple_bssid_locator.sh [-m|--map] [-a|--all] <bssid>
@@ -10,7 +39,7 @@ EOF
 }
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
-    echo "Error: missing required command '$1'" >&2
+    print_error "Error: missing required command '$1'"
     exit 1
   fi
 }
@@ -328,13 +357,13 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     -*)
-      echo "Error: unknown option '$1'" >&2
+      print_error "Error: unknown option '$1'"
       usage
       exit 1
       ;;
     *)
       if [[ -n "$BSSID" ]]; then
-        echo "Error: multiple BSSIDs provided" >&2
+        print_error "Error: multiple BSSIDs provided"
         usage
         exit 1
       fi
@@ -345,13 +374,13 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$BSSID" ]]; then
-  echo "Error: missing required BSSID argument" >&2
+  print_error "Error: missing required BSSID argument"
   usage
   exit 1
 fi
 
 if ! formatted_input=$(normalize_bssid "$BSSID"); then
-  echo "Error: invalid BSSID '$BSSID'" >&2
+  print_error "Error: invalid BSSID '$BSSID'"
   exit 1
 fi
 
@@ -389,7 +418,7 @@ device_len=$(wc -c < "$device_tmp")
 
 body_len=$(wc -c < "$body_tmp")
 if (( body_len <= 0 || body_len > 255 )); then
-  echo "Error: unexpected request length $body_len (expected 1-255)" >&2
+  print_error "Error: unexpected request length $body_len (expected 1-255)"
   exit 1
 fi
 
@@ -399,7 +428,7 @@ fi
   cat "$body_tmp"
 } > "$req_tmp"
 
-echo "Searching for location of BSSID: $BSSID"
+print_label_value "Searching for location of BSSID" "$BSSID"
 curl -sS --fail \
   -H 'User-Agent: locationd/1753.17 CFNetwork/889.9 Darwin/17.2.0' \
   --data-binary @"$req_tmp" \
@@ -407,7 +436,7 @@ curl -sS --fail \
   -o "$resp_tmp"
 
 if [[ ! -s "$resp_tmp" ]]; then
-  echo "Error: empty response from Apple WLOC endpoint" >&2
+  print_error "Error: empty response from Apple WLOC endpoint"
   exit 1
 fi
 
@@ -420,7 +449,7 @@ parse_response "$resp_body_tmp"
 
 result_count=${#RESULT_MACS[@]}
 if (( result_count == 0 )); then
-  echo "The bssid was not found." >&2
+  print_error "The BSSID was not found."
   exit 1
 fi
 
@@ -429,15 +458,15 @@ if (( ALL_FLAG )); then
     mac=${RESULT_MACS[i]}
     lat=${RESULT_LATS[i]}
     lon=${RESULT_LONS[i]}
-    echo "BSSID: $mac"
-    echo "Latitude: $lat"
-    echo "Longitude: $lon"
+    print_label_value "BSSID" "$mac"
+    print_label_value "Latitude" "$lat"
+    print_label_value "Longitude" "$lon"
     if (( MAP_FLAG && MAP_OPENED == 0 )); then
       open "http://www.google.com/maps/place/$lat,$lon" >/dev/null 2>&1 || true
       MAP_OPENED=1
     fi
     if (( i < result_count - 1 )); then
-      echo
+      printf '\n'
     fi
   done
 else
@@ -448,9 +477,9 @@ else
     lat=${RESULT_LATS[i]}
     lon=${RESULT_LONS[i]}
     if [[ "$mac" == "$target" ]]; then
-      echo "BSSID: $mac"
-      echo "Latitude: $lat"
-      echo "Longitude: $lon"
+      print_label_value "BSSID" "$mac"
+      print_label_value "Latitude" "$lat"
+      print_label_value "Longitude" "$lon"
       if (( MAP_FLAG )); then
         open "http://www.google.com/maps/place/$lat,$lon" >/dev/null 2>&1 || true
       fi
@@ -459,7 +488,7 @@ else
     fi
   done
   if (( ! found )); then
-    echo "The bssid was not found."
+    printf '%sThe BSSID was not found.%s\n' "${COLOR_ERROR}" "${COLOR_RESET}"
     exit 1
   fi
 fi
