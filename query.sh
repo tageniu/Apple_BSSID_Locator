@@ -360,6 +360,35 @@ while [[ $# -gt 0 ]]; do
       MAP_FLAG=1
       shift
       ;;
+    --)
+      shift
+      break
+      ;;
+    -[!-]*)
+      opt_cluster=${1#-}
+      while [[ -n "$opt_cluster" ]]; do
+        opt_char=${opt_cluster:0:1}
+        opt_cluster=${opt_cluster:1}
+        case "$opt_char" in
+          a)
+            ALL_FLAG=1
+            ;;
+          m)
+            MAP_FLAG=1
+            ;;
+          h)
+            usage
+            exit 0
+            ;;
+          *)
+            print_error "Error: unknown option '-$opt_char'"
+            usage
+            exit 1
+            ;;
+        esac
+      done
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
