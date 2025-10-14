@@ -128,13 +128,31 @@ read_bytes_as_string() {
   local len=$1
   local str=""
   local i byte char
+  local -a bytes=()
   for ((i=0; i<len && INDEX < BYTES_COUNT; i++)); do
     byte=${BYTES[INDEX]}
     INDEX=$((INDEX + 1))
     char=$(printf '%b' "\\$(printf '%03o' "$byte")")
     str+="$char"
+    bytes+=("$byte")
   done
-  STRING_RESULT="$str"
+  
+  # Prefer printable colon-delimited MACs when present, otherwise format raw bytes.
+  if [[ $str == *:* ]] && [[ $str =~ ^[0-9A-Fa-f:]+$ ]]; then
+    STRING_RESULT="$str"
+    return
+  fi
+
+  local formatted=""
+  for byte in "${bytes[@]}"; do
+    printf -v part '%02x' "$byte"
+    if [[ -z "$formatted" ]]; then
+      formatted="$part"
+    else
+      formatted+=":$part"
+    fi
+  done
+  STRING_RESULT="$formatted"
 }
 
 varint_to_signed() {
@@ -215,7 +233,9 @@ parse_wifi_device() {
         read_varint
         len=$((VARINT_RESULT))
         read_bytes_as_string "$len"
-        device_bssid="$STRING_RESULT"
+        if [[ -z "$device_bssid" ]]; then
+          device_bssid="$STRING_RESULT"
+        fi
         ;;
       2)
         local len
