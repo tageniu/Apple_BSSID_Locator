@@ -33,7 +33,7 @@ open_map_url() {
   local lat=$1
   local lon=$2
   local url="http://www.google.com/maps/place/${lat},${lon}"
-  print_label_value "Opening Maps" "$url"
+  print_label_value "- Opening Maps" "$url"
   open "$url" >/dev/null 2>&1 || true
 }
 
