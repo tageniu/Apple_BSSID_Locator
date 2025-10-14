@@ -29,6 +29,14 @@ print_label_value() {
   printf '%s%s:%s %s%s%s\n' "${COLOR_INFO}" "$label" "${COLOR_RESET}" "${COLOR_EMPH}" "$value" "${COLOR_RESET}"
 }
 
+open_map_url() {
+  local lat=$1
+  local lon=$2
+  local url="http://www.google.com/maps/place/${lat},${lon}"
+  print_label_value "Opening Maps" "$url"
+  open "$url" >/dev/null 2>&1 || true
+}
+
 usage() {
   cat <<'EOF'
 Usage: apple_bssid_locator.sh [-m|--map] [-a|--all] <bssid>
@@ -462,7 +470,7 @@ if (( ALL_FLAG )); then
     print_label_value "Latitude" "$lat"
     print_label_value "Longitude" "$lon"
     if (( MAP_FLAG && MAP_OPENED == 0 )); then
-      open "http://www.google.com/maps/place/$lat,$lon" >/dev/null 2>&1 || true
+      open_map_url "$lat" "$lon"
       MAP_OPENED=1
     fi
     if (( i < result_count - 1 )); then
@@ -481,7 +489,7 @@ else
       print_label_value "Latitude" "$lat"
       print_label_value "Longitude" "$lon"
       if (( MAP_FLAG )); then
-        open "http://www.google.com/maps/place/$lat,$lon" >/dev/null 2>&1 || true
+        open_map_url "$lat" "$lon"
       fi
       found=1
       break
