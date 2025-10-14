@@ -1,5 +1,5 @@
 # Apple BSSID Locator
-This standalone bash script queries Apple Location Services to look up the approximate position of a Wi-Fi access point by its BSSID (MAC address), and can optionally open the resolved coordinates in Apple/Google Maps.
+This standalone bash script queries Apple Location Services to look up the approximate position of a Wi-Fi access point by its BSSID (MAC address), and can optionally open the resolved coordinates in Google Maps.
 
 ## Usage
 1. Make the script executable
@@ -14,7 +14,7 @@ This standalone bash script queries Apple Location Services to look up the appro
    ```bash
    ./query.sh <BSSID> -a
    ```
-4. Open the location in Apple/Google Maps (macOS `open` command):
+4. Open the location in Google Maps (macOS `open` command):
    ```bash
    ./query.sh <BSSID> -m
    ```
