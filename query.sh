@@ -17,7 +17,7 @@ require_cmd() {
 
 normalize_bssid() {
   local raw=${1//-/:}
-  raw=$(printf '%s' "$raw" | tr '[:upper:]' '[:lower:]')
+  raw=$(printf '%s' "$raw" | LC_ALL=C tr '[:upper:]' '[:lower:]')
   IFS=':' read -r p0 p1 p2 p3 p4 p5 <<<"$raw"
   local parts=("$p0" "$p1" "$p2" "$p3" "$p4" "$p5")
   local normalized=""
