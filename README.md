@@ -18,7 +18,7 @@ This standalone bash script queries Apple Location Services to look up the appro
    ```bash
    ./query.sh <BSSID> -m
    ```
-Arguments can be combined, for example `./query.sh <BSSID> -a -m` or `./query.sh <BSSID> -am`to list all results and open each in the browser.
+Arguments can be combined, for example `./query.sh <BSSID> -a -m` or `./query.sh <BSSID> -am` to list all results and open each in the browser.
 
 ## Credits
 - [iSniff-GPS](https://github.com/hubert3/iSniff-GPS) by hubert3
